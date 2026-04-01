@@ -4,8 +4,8 @@ import (
 	// module name is travel
 	// use other package within the module
 	"fmt"
+	"travel/internal/api"
 	"travel/internal/config"
-	"travel/internal/http"
 	"travel/internal/ws"
 
 	"github.com/gin-contrib/cors"
@@ -15,8 +15,9 @@ import (
 )
 
 func main() {
+	// 读取配置，按需读取
 	config.InitConfig()
-	addr := fmt.Sprintf(":%d", config.GlobalConfig.Port)
+	port := fmt.Sprintf(":%d", config.GlobalConfig.Port)
 
 	r := gin.Default()
 
@@ -30,8 +31,14 @@ func main() {
         MaxAge:           12 * time.Hour,
     }))
 
-	r.GET("/hello", http.HttpHello)
+	// 注册路由与接口
+	// 静态文件托管
+	static_file_host_dir := config.GlobalConfig.SFHD
+	r.Static("/photos", static_file_host_dir)
+	// 接口注册
+	r.GET("/hello", api.HttpHello)
+	r.POST("/api/v1/photos", api.HttpPostPhotos)
 	r.GET("/ws", ws.WsHello)
 	
-	r.Run(addr)
+	r.Run(port)
 }

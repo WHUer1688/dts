@@ -1,0 +1,14 @@
+services:
+  db:
+    image: postgres:15-alpine # 推荐用 alpine 版本，体积小，下载快
+    container_name: my_project_pg
+    restart: always
+    environment:
+      POSTGRES_USER: root # 你的数据库账号
+      POSTGRES_PASSWORD: root # 你的数据库密码
+      POSTGRES_DB: dts_db # 启动时自动为你创建的数据库名
+      TZ: Asia/Shanghai # 设置时区
+    ports:
+      - "5432:5432" # 把容器内的 5432 暴露给本地的 5432
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data # 把数据挂载到项目目录的 pgdata 文件夹里

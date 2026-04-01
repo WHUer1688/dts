@@ -7,7 +7,11 @@ import (
 )
 
 type Config struct {
+	Host string `mapstructure:"host"`
 	Port int `mapstructure:"port"`
+	DbHost string `mapstructure:"db_host"`
+	DbPort int `mapstructure:"db_port"`
+	SFHD string `mapstructure:"static_file_host_dir"`
 }
 
 var GlobalConfig Config
