@@ -34,7 +34,6 @@ In the frontend, we use `watermelonDB`, which offers local-first capacity. The b
 |                       | user_id           | String   | 外键，关联 users                                                |                                              |
 |                       | created_at        | Number   | 这条记录初次记录的时间戳                                        |                                              |
 |                       | updated_at        | Number   | 这条记录上次被修改的时间戳                                      |                                              |
-|                       | deleted_at        | Number   | 这条记录被删除的时间戳                                          | 客户端db没有此字段                           |
 | -----                 | -----             | -----    | -----                                                           |                                              |
 | **photos** (照片)     | id                | String   | 照片ID(ULID)                                                    |                                              |
 |                       | space_id          | String   | 所属空间ID                                                      |                                              |
@@ -45,7 +44,7 @@ In the frontend, we use `watermelonDB`, which offers local-first capacity. The b
 |                       | shoted_at         | Number   | 拍摄时间戳 （用户看到的拍摄时间）                               |                                              |
 |                       | created_at        | Number   | 这条记录初次记录的时间戳                                        |                                              |
 |                       | updated_at        | Number   | 这条记录上次被修改的时间戳                                      |                                              |
-|                       | deleted_at        | Number   | 这条记录被删除的时间戳                                          |                                              |
+|                       | deleted_at        | Number   | 这条记录被删除的时间戳                                          | 仅服务器有                                   |
 |                       | last_modified     |          |                                                                 | 仅服务器有                                   |
 |                       | server_created_at |          |                                                                 | 仅服务器有                                   |
 | **expenses** (开销)   | id                | String   | 账单ID(ULID)                                                    |                                              |
@@ -55,24 +54,26 @@ In the frontend, we use `watermelonDB`, which offers local-first capacity. The b
 |                       | description       | String   | 消费描述 (如: 晚餐)                                             |                                              |
 |                       | created_at        | Number   | 这条记录初次记录的时间戳                                        |                                              |
 |                       | upadted_at        | Number   | 这条记录上次被修改的时间戳                                      |                                              |
-|                       | deleted_at        | Number   | 这条记录被删除的时间戳                                          | 客户端db没有此字段                           |
+|                       | deleted_at        | Number   | 这条记录被删除的时间戳                                          | 仅服务器有                                   |
 |                       | last_modified     |          |                                                                 | 仅服务器有                                   |
 |                       | server_created_at |          |                                                                 | 仅服务器有                                   |
 | **comments** (评论)   | id                | String   | 评论ID(ULID)                                                    |                                              |
+|                       | space_id          | String   |                                                                 |                                              |
 |                       | content           | String   | 评论内容                                                        |                                              |
 |                       | commenter_id      | String   | 评论者id                                                        |                                              |
 |                       | post_id           | String   | 帖子id                                                          |                                              |
 |                       | commented_at      | Number   | 用户看到的评论时间                                              |                                              |
 |                       | created_at        | Number   | 这条记录初次记录的时间戳                                        |                                              |
 |                       | updated_at        | Number   | 这条记录上次被修改的时间戳                                      |                                              |
-|                       | deleted_at        | Number   | 这条记录被删除的时间戳                                          | 客户端db没有此字段                           |
+|                       | deleted_at        | Number   | 这条记录被删除的时间戳                                          | 仅服务器有                                   |
 |                       | last_modified     |          |                                                                 | 仅服务器有                                   |
 |                       | server_created_at |          |                                                                 | 仅服务器有                                   |
 | **posts**（帖子）     |                   |          | posts意味着多张照片的集合，评论和照片描述需以一个post为基本单位 |                                              |
 |                       | id                | String   | 帖子ID                                                          |                                              |
+|                       | space_id          | String   |                                                                 |                                              |
 |                       | created_at        | Number   | 这条记录初次记录的时间戳                                        |                                              |
 |                       | updated_at        | Number   | 这条记录上次被修改的时间戳                                      |                                              |
-|                       | deleted_at        | Number   | 这条记录被删除的时间戳                                          | 客户端db没有此字段                           |
+|                       | deleted_at        | Number   | 这条记录被删除的时间戳                                          | 仅服务器有                                   |
 |                       | last_modified     |          |                                                                 | 仅服务器有                                   |
 |                       | server_created_at |          |                                                                 | 仅服务器有                                   |
 

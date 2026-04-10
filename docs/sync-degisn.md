@@ -24,3 +24,6 @@
     - server_created_at > last_pulled_at: 说明对客户端来说是新建的，塞到API回复的created中
     - last_modified > last_pulled_at: 说明对客户端来说是修改过的，塞到API回复的updated中
   - 需要区分`created_at`/`updated_at`
+
+## 同步过程
+1. 用户同步空间，首先调用`POST spaces`
