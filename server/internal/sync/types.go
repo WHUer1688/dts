@@ -31,24 +31,21 @@ type SyncChangeBucket struct {
 	Deleted []string          `json:"deleted"`
 }
 
-// SyncUser 关系表：无客户端 created_at / updated_at。
+// SyncUser 核心关系表：仅与 Pull 返回字段一致。
 type SyncUser struct {
-	ID        string `json:"id"`
-	Nickname  string `json:"nickname"`
-	DeletedAt int64  `json:"deleted_at"`
+	ID       string `json:"id"`
+	Nickname string `json:"nickname"`
 }
 
 type SyncSpace struct {
-	ID        string `json:"id"`
-	Name      string `json:"name"`
-	DeletedAt int64  `json:"deleted_at"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
 }
 
 type SyncSpaceMember struct {
-	ID        string `json:"id"`
-	SpaceID   string `json:"space_id"`
-	UserID    string `json:"user_id"`
-	DeletedAt int64  `json:"deleted_at"`
+	ID      string `json:"id"`
+	SpaceID string `json:"space_id"`
+	UserID  string `json:"user_id"`
 }
 
 type SyncPhoto struct {

@@ -2,33 +2,27 @@ package db
 
 import "gorm.io/gorm"
 
+// User 为核心关系表：仅 id / nickname，不参与增量同步字段与软删。
 type User struct {
-	ID              string `json:"id" gorm:"type:varchar(26);primaryKey"`
-	Nickname        string `json:"nickname" gorm:"type:text;not null;default:''"`
-	DeletedAt       int64  `json:"deleted_at" gorm:"column:deleted_at;not null;default:0;index"`
-	LastModified    int64  `json:"-" gorm:"column:last_modified;not null;default:0;index"`
-	ServerCreatedAt int64  `json:"-" gorm:"column:server_created_at;not null;default:0;index"`
+	ID       string `json:"id" gorm:"type:varchar(26);primaryKey"`
+	Nickname string `json:"nickname" gorm:"type:text;not null;default:''"`
 }
 
 func (User) TableName() string { return "users" }
 
+// Space 为核心关系表：仅 id / name。
 type Space struct {
-	ID              string `json:"id" gorm:"type:varchar(26);primaryKey"`
-	Name            string `json:"name" gorm:"type:text;not null;default:''"`
-	DeletedAt       int64  `json:"deleted_at" gorm:"column:deleted_at;not null;default:0;index"`
-	LastModified    int64  `json:"-" gorm:"column:last_modified;not null;default:0;index"`
-	ServerCreatedAt int64  `json:"-" gorm:"column:server_created_at;not null;default:0;index"`
+	ID   string `json:"id" gorm:"type:varchar(26);primaryKey"`
+	Name string `json:"name" gorm:"type:text;not null;default:''"`
 }
 
 func (Space) TableName() string { return "spaces" }
 
+// SpaceMember 为核心关系表：id 规范为 {space_id}_{user_id}。
 type SpaceMember struct {
-	ID              string `json:"id" gorm:"type:text;primaryKey"`
-	SpaceID         string `json:"space_id" gorm:"column:space_id;type:varchar(26);not null;index:idx_space_members_space_lm,priority:1;index:idx_space_members_space_deleted,priority:1"`
-	UserID          string `json:"user_id" gorm:"column:user_id;type:varchar(26);not null;index"`
-	DeletedAt       int64  `json:"deleted_at" gorm:"column:deleted_at;not null;default:0;index:idx_space_members_space_deleted,priority:2"`
-	LastModified    int64  `json:"-" gorm:"column:last_modified;not null;default:0;index:idx_space_members_space_lm,priority:2"`
-	ServerCreatedAt int64  `json:"-" gorm:"column:server_created_at;not null;default:0;index"`
+	ID      string `json:"id" gorm:"type:text;primaryKey"`
+	SpaceID string `json:"space_id" gorm:"column:space_id;type:varchar(26);not null;index"`
+	UserID  string `json:"user_id" gorm:"column:user_id;type:varchar(26);not null;index"`
 }
 
 func (SpaceMember) TableName() string { return "space_members" }

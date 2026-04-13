@@ -11,13 +11,13 @@ func BuildPullChanges(spaceID string, lastPulledAt int64) (map[string]PullChange
 	changes := map[string]PullChangeBucket{}
 	var err error
 
-	if changes["users"], err = pullUsers(spaceID, lastPulledAt); err != nil {
+	if changes["users"], err = pullCoreRelationUsers(spaceID); err != nil {
 		return nil, fmt.Errorf("pull users failed: %w", err)
 	}
-	if changes["spaces"], err = pullSpaces(spaceID, lastPulledAt); err != nil {
+	if changes["spaces"], err = pullCoreRelationSpaces(spaceID); err != nil {
 		return nil, fmt.Errorf("pull spaces failed: %w", err)
 	}
-	if changes["space_members"], err = pullSpaceMembers(spaceID, lastPulledAt); err != nil {
+	if changes["space_members"], err = pullCoreRelationSpaceMembers(spaceID); err != nil {
 		return nil, fmt.Errorf("pull space_members failed: %w", err)
 	}
 	if changes["photos"], err = pullPhotos(spaceID, lastPulledAt); err != nil {
@@ -36,75 +36,44 @@ func BuildPullChanges(spaceID string, lastPulledAt int64) (map[string]PullChange
 	return changes, nil
 }
 
-func pullUsers(spaceID string, lastPulledAt int64) (PullChangeBucket, error) {
-	var createdRows []db.User
-	var updatedRows []db.User
-	var deletedIDs []string
-	baseQuery := func() *gorm.DB {
-		return db.DB.Model(&db.User{}).
-			Joins("JOIN space_members ON space_members.user_id = users.id").
-			Where("space_members.space_id = ?", spaceID).
-			Session(&gorm.Session{})
-	}
-	if err := baseQuery().Where("users.deleted_at = 0 AND users.last_modified > ? AND users.server_created_at > ?", lastPulledAt, lastPulledAt).Find(&createdRows).Error; err != nil {
-		return PullChangeBucket{}, err
-	}
-	if err := baseQuery().Where("users.deleted_at = 0 AND users.last_modified > ? AND users.server_created_at <= ?", lastPulledAt, lastPulledAt).Find(&updatedRows).Error; err != nil {
-		return PullChangeBucket{}, err
-	}
-	if err := baseQuery().Where("users.deleted_at > ?", lastPulledAt).Pluck("users.id", &deletedIDs).Error; err != nil {
+// pullCoreRelationUsers 当前空间成员对应的 users，全部放入 created（不按 last_pulled_at 分类）。
+func pullCoreRelationUsers(spaceID string) (PullChangeBucket, error) {
+	var rows []db.User
+	err := db.DB.Model(&db.User{}).
+		Joins("JOIN space_members ON space_members.user_id = users.id").
+		Where("space_members.space_id = ?", spaceID).
+		Find(&rows).Error
+	if err != nil {
 		return PullChangeBucket{}, err
 	}
 	return PullChangeBucket{
-		Created: mapUsersForPull(createdRows),
-		Updated: mapUsersForPull(updatedRows),
-		Deleted: deletedIDs,
+		Created: mapUsersForPull(rows),
+		Updated: []any{},
+		Deleted: []string{},
 	}, nil
 }
 
-func pullSpaces(spaceID string, lastPulledAt int64) (PullChangeBucket, error) {
-	var createdRows []db.Space
-	var updatedRows []db.Space
-	var deletedIDs []string
-	baseQuery := func() *gorm.DB {
-		return db.DB.Model(&db.Space{}).Session(&gorm.Session{})
-	}
-	if err := baseQuery().Where("id = ? AND deleted_at = 0 AND last_modified > ? AND server_created_at > ?", spaceID, lastPulledAt, lastPulledAt).Find(&createdRows).Error; err != nil {
-		return PullChangeBucket{}, err
-	}
-	if err := baseQuery().Where("id = ? AND deleted_at = 0 AND last_modified > ? AND server_created_at <= ?", spaceID, lastPulledAt, lastPulledAt).Find(&updatedRows).Error; err != nil {
-		return PullChangeBucket{}, err
-	}
-	if err := baseQuery().Where("id = ? AND deleted_at > ?", spaceID, lastPulledAt).Pluck("id", &deletedIDs).Error; err != nil {
+func pullCoreRelationSpaces(spaceID string) (PullChangeBucket, error) {
+	var rows []db.Space
+	if err := db.DB.Where("id = ?", spaceID).Find(&rows).Error; err != nil {
 		return PullChangeBucket{}, err
 	}
 	return PullChangeBucket{
-		Created: mapSpacesForPull(createdRows),
-		Updated: mapSpacesForPull(updatedRows),
-		Deleted: deletedIDs,
+		Created: mapSpacesForPull(rows),
+		Updated: []any{},
+		Deleted: []string{},
 	}, nil
 }
 
-func pullSpaceMembers(spaceID string, lastPulledAt int64) (PullChangeBucket, error) {
-	var createdRows []db.SpaceMember
-	var updatedRows []db.SpaceMember
-	var deletedIDs []string
-	baseQuery := func() *gorm.DB {
-		return db.DB.Model(&db.SpaceMember{}).Session(&gorm.Session{})
-	}
-	if err := baseQuery().Where("space_id = ? AND deleted_at = 0 AND last_modified > ? AND server_created_at > ?", spaceID, lastPulledAt, lastPulledAt).Find(&createdRows).Error; err != nil {
-		return PullChangeBucket{}, err
-	}
-	if err := baseQuery().Where("space_id = ? AND deleted_at = 0 AND last_modified > ? AND server_created_at <= ?", spaceID, lastPulledAt, lastPulledAt).Find(&updatedRows).Error; err != nil {
-		return PullChangeBucket{}, err
-	}
-	if err := baseQuery().Where("space_id = ? AND deleted_at > ?", spaceID, lastPulledAt).Pluck("id", &deletedIDs).Error; err != nil {
+func pullCoreRelationSpaceMembers(spaceID string) (PullChangeBucket, error) {
+	var rows []db.SpaceMember
+	if err := db.DB.Where("space_id = ?", spaceID).Find(&rows).Error; err != nil {
 		return PullChangeBucket{}, err
 	}
 	return PullChangeBucket{
-		Created: mapSpaceMembersForPull(createdRows),
-		Updated: mapSpaceMembersForPull(updatedRows),
-		Deleted: deletedIDs,
+		Created: mapSpaceMembersForPull(rows),
+		Updated: []any{},
+		Deleted: []string{},
 	}, nil
 }
 

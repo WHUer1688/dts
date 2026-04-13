@@ -34,7 +34,7 @@ func ApplySyncChanges(tx *gorm.DB, changes map[string]SyncChangeBucket, lastPull
 	return nil
 }
 
-func applyUserChanges(tx *gorm.DB, bucket SyncChangeBucket, lastPulledAt int64) error {
+func applyUserChanges(tx *gorm.DB, bucket SyncChangeBucket, _ int64) error {
 	created, err := DecodeBucket[SyncUser](bucket.Created)
 	if err != nil {
 		return fmt.Errorf("process users created failed: %w", gorm.ErrInvalidData)
@@ -44,34 +44,19 @@ func applyUserChanges(tx *gorm.DB, bucket SyncChangeBucket, lastPulledAt int64) 
 		return fmt.Errorf("process users updated failed: %w", gorm.ErrInvalidData)
 	}
 	for _, item := range created {
-		if item.ID == "" {
-			continue
-		}
-		if !IsMillisTS(item.DeletedAt) {
-			return fmt.Errorf("process users upsert failed: %w", gorm.ErrInvalidData)
-		}
-		if err := upsertUser(tx, item, PushModeCreated, lastPulledAt); err != nil {
+		if err := upsertUser(tx, item); err != nil {
 			return fmt.Errorf("process users upsert failed: %w", err)
 		}
 	}
 	for _, item := range updated {
-		if item.ID == "" {
-			continue
-		}
-		if !IsMillisTS(item.DeletedAt) {
-			return fmt.Errorf("process users upsert failed: %w", gorm.ErrInvalidData)
-		}
-		if err := upsertUser(tx, item, PushModeUpdated, lastPulledAt); err != nil {
+		if err := upsertUser(tx, item); err != nil {
 			return fmt.Errorf("process users upsert failed: %w", err)
 		}
-	}
-	if err := softDeleteRelationByIDs(tx, "users", bucket.Deleted, NowMillis()); err != nil {
-		return fmt.Errorf("process users deleted failed: %w", err)
 	}
 	return nil
 }
 
-func applySpaceChanges(tx *gorm.DB, bucket SyncChangeBucket, lastPulledAt int64) error {
+func applySpaceChanges(tx *gorm.DB, bucket SyncChangeBucket, _ int64) error {
 	created, err := DecodeBucket[SyncSpace](bucket.Created)
 	if err != nil {
 		return fmt.Errorf("process spaces created failed: %w", gorm.ErrInvalidData)
@@ -81,34 +66,19 @@ func applySpaceChanges(tx *gorm.DB, bucket SyncChangeBucket, lastPulledAt int64)
 		return fmt.Errorf("process spaces updated failed: %w", gorm.ErrInvalidData)
 	}
 	for _, item := range created {
-		if item.ID == "" {
-			continue
-		}
-		if !IsMillisTS(item.DeletedAt) {
-			return fmt.Errorf("process spaces upsert failed: %w", gorm.ErrInvalidData)
-		}
-		if err := upsertSpace(tx, item, PushModeCreated, lastPulledAt); err != nil {
+		if err := upsertSpace(tx, item); err != nil {
 			return fmt.Errorf("process spaces upsert failed: %w", err)
 		}
 	}
 	for _, item := range updated {
-		if item.ID == "" {
-			continue
-		}
-		if !IsMillisTS(item.DeletedAt) {
-			return fmt.Errorf("process spaces upsert failed: %w", gorm.ErrInvalidData)
-		}
-		if err := upsertSpace(tx, item, PushModeUpdated, lastPulledAt); err != nil {
+		if err := upsertSpace(tx, item); err != nil {
 			return fmt.Errorf("process spaces upsert failed: %w", err)
 		}
-	}
-	if err := softDeleteRelationByIDs(tx, "spaces", bucket.Deleted, NowMillis()); err != nil {
-		return fmt.Errorf("process spaces deleted failed: %w", err)
 	}
 	return nil
 }
 
-func applySpaceMemberChanges(tx *gorm.DB, bucket SyncChangeBucket, lastPulledAt int64) error {
+func applySpaceMemberChanges(tx *gorm.DB, bucket SyncChangeBucket, _ int64) error {
 	created, err := DecodeBucket[SyncSpaceMember](bucket.Created)
 	if err != nil {
 		return fmt.Errorf("process space_members created failed: %w", gorm.ErrInvalidData)
@@ -122,10 +92,7 @@ func applySpaceMemberChanges(tx *gorm.DB, bucket SyncChangeBucket, lastPulledAt 
 		if err != nil {
 			return fmt.Errorf("process space_members failed: %s: %w", err.Error(), gorm.ErrInvalidData)
 		}
-		if !IsMillisTS(normalized.DeletedAt) {
-			return fmt.Errorf("process space_members upsert failed: %w", gorm.ErrInvalidData)
-		}
-		if err := upsertSpaceMember(tx, normalized, PushModeCreated, lastPulledAt); err != nil {
+		if err := upsertSpaceMember(tx, normalized); err != nil {
 			return fmt.Errorf("process space_members upsert failed: %w", err)
 		}
 	}
@@ -134,15 +101,9 @@ func applySpaceMemberChanges(tx *gorm.DB, bucket SyncChangeBucket, lastPulledAt 
 		if err != nil {
 			return fmt.Errorf("process space_members failed: %s: %w", err.Error(), gorm.ErrInvalidData)
 		}
-		if !IsMillisTS(normalized.DeletedAt) {
-			return fmt.Errorf("process space_members upsert failed: %w", gorm.ErrInvalidData)
-		}
-		if err := upsertSpaceMember(tx, normalized, PushModeUpdated, lastPulledAt); err != nil {
+		if err := upsertSpaceMember(tx, normalized); err != nil {
 			return fmt.Errorf("process space_members upsert failed: %w", err)
 		}
-	}
-	if err := softDeleteRelationByIDs(tx, "space_members", bucket.Deleted, NowMillis()); err != nil {
-		return fmt.Errorf("process space_members deleted failed: %w", err)
 	}
 	return nil
 }
@@ -271,86 +232,88 @@ func applyCommentChanges(tx *gorm.DB, bucket SyncChangeBucket, lastPulledAt int6
 	return nil
 }
 
-func upsertUser(tx *gorm.DB, item SyncUser, mode PushMode, lastPulledAt int64) error {
+func upsertUser(tx *gorm.DB, item SyncUser) error {
+	if item.ID == "" {
+		return nil
+	}
+	if !IsValidULID(item.ID) {
+		return fmt.Errorf("invalid ULID for users.id: %s: %w", item.ID, gorm.ErrInvalidData)
+	}
 	var existing db.User
 	err := tx.Where("id = ?", item.ID).First(&existing).Error
-	ts := NowMillis()
 	record := db.User{
-		ID:        item.ID,
-		Nickname:  item.Nickname,
-		DeletedAt: item.DeletedAt,
+		ID:       item.ID,
+		Nickname: item.Nickname,
 	}
 	switch {
 	case err == nil:
-		if mode == PushModeUpdated && existing.LastModified > lastPulledAt {
-			return ConflictError{Table: "users", ID: item.ID}
-		}
 		return tx.Model(&existing).UpdateColumns(map[string]any{
-			"nickname":      record.Nickname,
-			"deleted_at":    record.DeletedAt,
-			"last_modified": ts,
+			"nickname": record.Nickname,
 		}).Error
 	case errors.Is(err, gorm.ErrRecordNotFound):
-		record.ServerCreatedAt = ts
-		record.LastModified = ts
+		if record.Nickname == "" {
+			record.Nickname = "user-" + item.ID
+		}
 		return tx.Create(&record).Error
 	default:
 		return err
 	}
 }
 
-func upsertSpace(tx *gorm.DB, item SyncSpace, mode PushMode, lastPulledAt int64) error {
+func upsertSpace(tx *gorm.DB, item SyncSpace) error {
+	if item.ID == "" {
+		return nil
+	}
+	if !IsValidULID(item.ID) {
+		return fmt.Errorf("invalid ULID for spaces.id: %s: %w", item.ID, gorm.ErrInvalidData)
+	}
 	var existing db.Space
 	err := tx.Where("id = ?", item.ID).First(&existing).Error
-	ts := NowMillis()
 	record := db.Space{
-		ID:        item.ID,
-		Name:      item.Name,
-		DeletedAt: item.DeletedAt,
+		ID:   item.ID,
+		Name: item.Name,
 	}
 	switch {
 	case err == nil:
-		if mode == PushModeUpdated && existing.LastModified > lastPulledAt {
-			return ConflictError{Table: "spaces", ID: item.ID}
-		}
 		return tx.Model(&existing).UpdateColumns(map[string]any{
-			"name":          record.Name,
-			"deleted_at":    record.DeletedAt,
-			"last_modified":   ts,
+			"name": record.Name,
 		}).Error
 	case errors.Is(err, gorm.ErrRecordNotFound):
-		record.ServerCreatedAt = ts
-		record.LastModified = ts
 		return tx.Create(&record).Error
 	default:
 		return err
 	}
 }
 
-func upsertSpaceMember(tx *gorm.DB, item SyncSpaceMember, mode PushMode, lastPulledAt int64) error {
+func upsertSpaceMember(tx *gorm.DB, item SyncSpaceMember) error {
+	var spaceCount, userCount int64
+	if err := tx.Model(&db.Space{}).Where("id = ?", item.SpaceID).Count(&spaceCount).Error; err != nil {
+		return err
+	}
+	if spaceCount == 0 {
+		return fmt.Errorf("space_members: space_id not found: %w", gorm.ErrInvalidData)
+	}
+	if err := tx.Model(&db.User{}).Where("id = ?", item.UserID).Count(&userCount).Error; err != nil {
+		return err
+	}
+	if userCount == 0 {
+		return fmt.Errorf("space_members: user_id not found: %w", gorm.ErrInvalidData)
+	}
+
 	var existing db.SpaceMember
 	err := tx.Where("id = ?", item.ID).First(&existing).Error
-	ts := NowMillis()
 	record := db.SpaceMember{
-		ID:        item.ID,
-		SpaceID:   item.SpaceID,
-		UserID:    item.UserID,
-		DeletedAt: item.DeletedAt,
+		ID:      item.ID,
+		SpaceID: item.SpaceID,
+		UserID:  item.UserID,
 	}
 	switch {
 	case err == nil:
-		if mode == PushModeUpdated && existing.LastModified > lastPulledAt {
-			return ConflictError{Table: "space_members", ID: item.ID}
-		}
 		return tx.Model(&existing).UpdateColumns(map[string]any{
-			"space_id":      record.SpaceID,
-			"user_id":       record.UserID,
-			"deleted_at":    record.DeletedAt,
-			"last_modified": ts,
+			"space_id": record.SpaceID,
+			"user_id":  record.UserID,
 		}).Error
 	case errors.Is(err, gorm.ErrRecordNotFound):
-		record.ServerCreatedAt = ts
-		record.LastModified = ts
 		return tx.Create(&record).Error
 	default:
 		return err
@@ -529,18 +492,6 @@ func upsertComment(tx *gorm.DB, item SyncComment, mode PushMode, lastPulledAt in
 	default:
 		return err
 	}
-}
-
-func softDeleteRelationByIDs(tx *gorm.DB, table string, ids []string, ts int64) error {
-	if len(ids) == 0 {
-		return nil
-	}
-	return tx.Table(table).
-		Where("id IN ?", ids).
-		Updates(map[string]any{
-			"deleted_at":    ts,
-			"last_modified": ts,
-		}).Error
 }
 
 func softDeleteContentByIDs(tx *gorm.DB, table string, ids []string, ts int64) error {

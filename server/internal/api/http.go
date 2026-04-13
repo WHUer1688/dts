@@ -33,9 +33,8 @@ func HttpPostSpaces(c *gin.Context) {
 		return
 	}
 
-	ts := sync.NowMillis()
 	err := db.WithTx(func(tx *gorm.DB) error {
-		return spaces.EnsureBinding(tx, req.UserID, req.SpaceID, req.SpaceName, ts)
+		return spaces.EnsureBinding(tx, req.UserID, req.SpaceID, req.SpaceName)
 	})
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

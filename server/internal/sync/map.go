@@ -8,9 +8,8 @@ func mapUsersForPull(rows []db.User) []any {
 	out := make([]any, 0, len(rows))
 	for _, r := range rows {
 		out = append(out, map[string]any{
-			"id":         r.ID,
-			"nickname":   r.Nickname,
-			"deleted_at": NormalizeTSMillis(r.DeletedAt),
+			"id":       r.ID,
+			"nickname": r.Nickname,
 		})
 	}
 	return out
@@ -20,9 +19,8 @@ func mapSpacesForPull(rows []db.Space) []any {
 	out := make([]any, 0, len(rows))
 	for _, r := range rows {
 		out = append(out, map[string]any{
-			"id":         r.ID,
-			"name":       r.Name,
-			"deleted_at": NormalizeTSMillis(r.DeletedAt),
+			"id":   r.ID,
+			"name": r.Name,
 		})
 	}
 	return out
@@ -32,10 +30,9 @@ func mapSpaceMembersForPull(rows []db.SpaceMember) []any {
 	out := make([]any, 0, len(rows))
 	for _, r := range rows {
 		out = append(out, map[string]any{
-			"id":         r.SpaceID + "_" + r.UserID,
-			"space_id":   r.SpaceID,
-			"user_id":    r.UserID,
-			"deleted_at": NormalizeTSMillis(r.DeletedAt),
+			"id":       r.SpaceID + "_" + r.UserID,
+			"space_id": r.SpaceID,
+			"user_id":  r.UserID,
 		})
 	}
 	return out

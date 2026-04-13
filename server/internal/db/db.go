@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
@@ -64,22 +65,49 @@ func InitDB(dsn string) error {
 		log.Printf("数据库服务端同步字段回填失败: %v", err)
 		return err
 	}
+	if err := dropObsoleteCoreRelationColumns(DB); err != nil {
+		log.Printf("核心关系表历史列清理失败: %v", err)
+		return err
+	}
 
 	log.Printf("数据库连接成功！")
 	return nil
 }
 
 func backfillServerSyncColumns(db *gorm.DB) error {
-	relationTables := []string{"users", "spaces", "space_members"}
 	contentTables := []string{"photos", "expenses", "posts", "comments"}
-	for _, table := range relationTables {
-		if err := backfillServerSyncColumnsRelation(db, table); err != nil {
-			return err
-		}
-	}
 	for _, table := range contentTables {
 		if err := backfillServerSyncColumnsContent(db, table); err != nil {
 			return err
+		}
+	}
+	return nil
+}
+
+// dropObsoleteCoreRelationColumns 移除 users/spaces/space_members 上已不再使用的增量同步相关列（历史库兼容）。
+func dropObsoleteCoreRelationColumns(db *gorm.DB) error {
+	type pair struct {
+		table   string
+		columns []string
+	}
+	pairs := []pair{
+		{"users", []string{"created_at", "updated_at", "deleted_at", "last_modified", "server_created", "server_created_at"}},
+		{"spaces", []string{"created_at", "updated_at", "deleted_at", "last_modified", "server_created", "server_created_at"}},
+		{"space_members", []string{"created_at", "updated_at", "deleted_at", "last_modified", "server_created", "server_created_at"}},
+	}
+	for _, p := range pairs {
+		for _, col := range p.columns {
+			exists, err := hasColumn(db, p.table, col)
+			if err != nil {
+				return err
+			}
+			if !exists {
+				continue
+			}
+			q := fmt.Sprintf(`ALTER TABLE %s DROP COLUMN IF EXISTS %s`, p.table, col)
+			if err := db.Exec(q).Error; err != nil {
+				return err
+			}
 		}
 	}
 	return nil
@@ -105,46 +133,9 @@ func backfillServerSyncColumnsContent(db *gorm.DB, table string) error {
 	return db.Exec(queryModified).Error
 }
 
-// backfillServerSyncColumnsRelation 针对已移除客户端 created_at/updated_at 的关系表；若历史库仍保留这两列则沿用旧回填逻辑。
-func backfillServerSyncColumnsRelation(db *gorm.DB, table string) error {
-	hasLastModified, err := hasColumn(db, table, "last_modified")
-	if err != nil {
-		return err
-	}
-	hasServerCreatedAt, err := hasColumn(db, table, "server_created_at")
-	if err != nil {
-		return err
-	}
-	if !hasLastModified || !hasServerCreatedAt {
-		return nil
-	}
-	hasCreatedAt, err := hasColumn(db, table, "created_at")
-	if err != nil {
-		return err
-	}
-	hasUpdatedAt, err := hasColumn(db, table, "updated_at")
-	if err != nil {
-		return err
-	}
-	if hasCreatedAt && hasUpdatedAt {
-		queryCreated := "UPDATE " + table + " SET server_created_at = CASE WHEN created_at > 0 THEN created_at ELSE updated_at END WHERE server_created_at = 0"
-		if err := db.Exec(queryCreated).Error; err != nil {
-			return err
-		}
-		queryModified := "UPDATE " + table + " SET last_modified = GREATEST(server_created_at, updated_at, deleted_at) WHERE last_modified = 0"
-		return db.Exec(queryModified).Error
-	}
-	q1 := "UPDATE " + table + " SET server_created_at = last_modified WHERE server_created_at = 0 AND last_modified > 0"
-	if err := db.Exec(q1).Error; err != nil {
-		return err
-	}
-	q2 := "UPDATE " + table + " SET last_modified = GREATEST(COALESCE(NULLIF(server_created_at,0), 0), COALESCE(NULLIF(deleted_at,0), 0)) WHERE last_modified = 0 AND (server_created_at > 0 OR deleted_at > 0)"
-	return db.Exec(q2).Error
-}
-
 // renameLegacyServerCreatedColumn 将旧列 server_created 改名为 server_created_at（仅当新列尚不存在时）。
 func renameLegacyServerCreatedColumn(db *gorm.DB) error {
-	tables := []string{"users", "spaces", "space_members", "photos", "expenses", "posts", "comments"}
+	tables := []string{"photos", "expenses", "posts", "comments"}
 	for _, table := range tables {
 		hasOld, err := hasColumn(db, table, "server_created")
 		if err != nil {
@@ -167,7 +158,7 @@ func renameLegacyServerCreatedColumn(db *gorm.DB) error {
 
 // copyLegacyServerCreatedIntoServerCreatedAt 在同时存在 server_created 与 server_created_at 时，把旧列数据拷入新列（AutoMigrate 可能已追加空的新列）。
 func copyLegacyServerCreatedIntoServerCreatedAt(db *gorm.DB) error {
-	tables := []string{"users", "spaces", "space_members", "photos", "expenses", "posts", "comments"}
+	tables := []string{"photos", "expenses", "posts", "comments"}
 	for _, table := range tables {
 		hasOld, err := hasColumn(db, table, "server_created")
 		if err != nil {
@@ -294,12 +285,6 @@ func normalizeLegacyTimestampUnits(db *gorm.DB) error {
 		table  string
 		column string
 	}{
-		{"users", "created_at"}, {"users", "updated_at"}, {"users", "deleted_at"},
-		{"users", "last_modified"}, {"users", "server_created"}, {"users", "server_created_at"},
-		{"spaces", "created_at"}, {"spaces", "updated_at"}, {"spaces", "deleted_at"},
-		{"spaces", "last_modified"}, {"spaces", "server_created"}, {"spaces", "server_created_at"},
-		{"space_members", "created_at"}, {"space_members", "updated_at"}, {"space_members", "deleted_at"},
-		{"space_members", "last_modified"}, {"space_members", "server_created"}, {"space_members", "server_created_at"},
 		{"posts", "created_at"}, {"posts", "updated_at"}, {"posts", "deleted_at"},
 		{"posts", "last_modified"}, {"posts", "server_created"}, {"posts", "server_created_at"},
 		{"photos", "shoted_at"}, {"photos", "created_at"}, {"photos", "updated_at"}, {"photos", "deleted_at"},
