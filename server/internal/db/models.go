@@ -32,7 +32,7 @@ type Post struct {
 	SpaceID         string `json:"space_id" gorm:"column:space_id;type:varchar(26);not null;index:idx_posts_space_updated,priority:1;index:idx_posts_space_deleted,priority:1"`
 	CreatedAt       int64  `json:"created_at" gorm:"column:created_at;not null;index;autoCreateTime:false"`
 	UpdatedAt       int64  `json:"updated_at" gorm:"column:updated_at;not null;index:idx_posts_space_updated,priority:2;autoUpdateTime:false"`
-	DeletedAt       int64  `json:"deleted_at" gorm:"column:deleted_at;not null;default:0;index:idx_posts_space_deleted,priority:2"`
+	DeletedAt       int64  `json:"-" gorm:"column:deleted_at;not null;default:0;index:idx_posts_space_deleted,priority:2"`
 	LastModified    int64  `json:"-" gorm:"column:last_modified;not null;default:0;index"`
 	ServerCreatedAt int64  `json:"-" gorm:"column:server_created_at;not null;default:0;index"`
 }
@@ -48,7 +48,7 @@ type Photo struct {
 	ShotedAt        int64  `json:"shoted_at" gorm:"column:shoted_at;not null;default:0;index"`
 	CreatedAt       int64  `json:"created_at" gorm:"column:created_at;not null;index;autoCreateTime:false"`
 	UpdatedAt       int64  `json:"updated_at" gorm:"column:updated_at;not null;index:idx_photos_space_updated,priority:2;autoUpdateTime:false"`
-	DeletedAt       int64  `json:"deleted_at" gorm:"column:deleted_at;not null;default:0;index:idx_photos_space_deleted,priority:2"`
+	DeletedAt       int64  `json:"-" gorm:"column:deleted_at;not null;default:0;index:idx_photos_space_deleted,priority:2"`
 	LastModified    int64  `json:"-" gorm:"column:last_modified;not null;default:0;index"`
 	ServerCreatedAt int64  `json:"-" gorm:"column:server_created_at;not null;default:0;index"`
 }
@@ -63,7 +63,7 @@ type Expense struct {
 	Description     string  `json:"description" gorm:"column:description;type:text;not null;default:''"`
 	CreatedAt       int64   `json:"created_at" gorm:"column:created_at;not null;index;autoCreateTime:false"`
 	UpdatedAt       int64   `json:"updated_at" gorm:"column:updated_at;not null;index:idx_expenses_space_updated,priority:2;autoUpdateTime:false"`
-	DeletedAt       int64   `json:"deleted_at" gorm:"column:deleted_at;not null;default:0;index:idx_expenses_space_deleted,priority:2"`
+	DeletedAt       int64   `json:"-" gorm:"column:deleted_at;not null;default:0;index:idx_expenses_space_deleted,priority:2"`
 	LastModified    int64   `json:"-" gorm:"column:last_modified;not null;default:0;index"`
 	ServerCreatedAt int64   `json:"-" gorm:"column:server_created_at;not null;default:0;index"`
 }
@@ -79,7 +79,7 @@ type Comment struct {
 	CommentedAt     int64  `json:"commented_at" gorm:"column:commented_at;not null;default:0;index"`
 	CreatedAt       int64  `json:"created_at" gorm:"column:created_at;not null;index;autoCreateTime:false"`
 	UpdatedAt       int64  `json:"updated_at" gorm:"column:updated_at;not null;index:idx_comments_space_updated,priority:2;autoUpdateTime:false"`
-	DeletedAt       int64  `json:"deleted_at" gorm:"column:deleted_at;not null;default:0;index:idx_comments_space_deleted,priority:2"`
+	DeletedAt       int64  `json:"-" gorm:"column:deleted_at;not null;default:0;index:idx_comments_space_deleted,priority:2"`
 	LastModified    int64  `json:"-" gorm:"column:last_modified;not null;default:0;index"`
 	ServerCreatedAt int64  `json:"-" gorm:"column:server_created_at;not null;default:0;index"`
 }

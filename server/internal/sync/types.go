@@ -57,7 +57,6 @@ type SyncPhoto struct {
 	ShotedAt   int64  `json:"shoted_at"`
 	CreatedAt  int64  `json:"created_at"`
 	UpdatedAt  int64  `json:"updated_at"`
-	DeletedAt  int64  `json:"deleted_at"`
 }
 
 type SyncExpense struct {
@@ -68,7 +67,6 @@ type SyncExpense struct {
 	Description string  `json:"description"`
 	CreatedAt   int64   `json:"created_at"`
 	UpdatedAt   int64   `json:"updated_at"`
-	DeletedAt   int64   `json:"deleted_at"`
 }
 
 type SyncPost struct {
@@ -76,7 +74,6 @@ type SyncPost struct {
 	SpaceID   string `json:"space_id"`
 	CreatedAt int64  `json:"created_at"`
 	UpdatedAt int64  `json:"updated_at"`
-	DeletedAt int64  `json:"deleted_at"`
 }
 
 type SyncComment struct {
@@ -88,7 +85,6 @@ type SyncComment struct {
 	CommentedAt int64  `json:"commented_at"`
 	CreatedAt   int64  `json:"created_at"`
 	UpdatedAt   int64  `json:"updated_at"`
-	DeletedAt   int64  `json:"deleted_at"`
 }
 
 type PullChangeBucket struct {

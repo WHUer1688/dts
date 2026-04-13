@@ -50,7 +50,6 @@ func mapPhotosForPull(rows []db.Photo) []any {
 			"shoted_at":   NormalizeTSMillis(r.ShotedAt),
 			"created_at":  NormalizeTSMillis(r.CreatedAt),
 			"updated_at":  NormalizeTSMillis(r.UpdatedAt),
-			"deleted_at":  NormalizeTSMillis(r.DeletedAt),
 		})
 	}
 	return out
@@ -67,7 +66,6 @@ func mapExpensesForPull(rows []db.Expense) []any {
 			"description": r.Description,
 			"created_at":  NormalizeTSMillis(r.CreatedAt),
 			"updated_at":  NormalizeTSMillis(r.UpdatedAt),
-			"deleted_at":  NormalizeTSMillis(r.DeletedAt),
 		})
 	}
 	return out
@@ -81,7 +79,6 @@ func mapPostsForPull(rows []db.Post) []any {
 			"space_id":   r.SpaceID,
 			"created_at": NormalizeTSMillis(r.CreatedAt),
 			"updated_at": NormalizeTSMillis(r.UpdatedAt),
-			"deleted_at": NormalizeTSMillis(r.DeletedAt),
 		})
 	}
 	return out
@@ -99,7 +96,6 @@ func mapCommentsForPull(rows []db.Comment) []any {
 			"commented_at": NormalizeTSMillis(r.CommentedAt),
 			"created_at":   NormalizeTSMillis(r.CreatedAt),
 			"updated_at":   NormalizeTSMillis(r.UpdatedAt),
-			"deleted_at":   NormalizeTSMillis(r.DeletedAt),
 		})
 	}
 	return out

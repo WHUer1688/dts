@@ -333,7 +333,6 @@ func upsertPhoto(tx *gorm.DB, item SyncPhoto, mode PushMode, lastPulledAt int64)
 		ShotedAt:   NormalizeTSMillis(item.ShotedAt),
 		CreatedAt:  NormalizeTSMillis(item.CreatedAt),
 		UpdatedAt:  NormalizeTSMillis(item.UpdatedAt),
-		DeletedAt:  NormalizeTSMillis(item.DeletedAt),
 	}
 	if record.CreatedAt == 0 {
 		record.CreatedAt = ts
@@ -347,15 +346,15 @@ func upsertPhoto(tx *gorm.DB, item SyncPhoto, mode PushMode, lastPulledAt int64)
 			return ConflictError{Table: "photos", ID: item.ID}
 		}
 		return tx.Model(&existing).UpdateColumns(map[string]any{
-			"space_id":       record.SpaceID,
-			"uploader_id":    record.UploaderID,
-			"remote_url":     record.RemoteURL,
-			"post_id":        record.PostID,
-			"shoted_at":      record.ShotedAt,
-			"created_at":     record.CreatedAt,
-			"updated_at":     record.UpdatedAt,
-			"deleted_at":     record.DeletedAt,
-			"last_modified":  ts,
+			"space_id":      record.SpaceID,
+			"uploader_id":   record.UploaderID,
+			"remote_url":    record.RemoteURL,
+			"post_id":       record.PostID,
+			"shoted_at":     record.ShotedAt,
+			"created_at":    record.CreatedAt,
+			"updated_at":    record.UpdatedAt,
+			"deleted_at":    record.DeletedAt,
+			"last_modified": ts,
 		}).Error
 	case errors.Is(err, gorm.ErrRecordNotFound):
 		record.ServerCreatedAt = ts
@@ -378,7 +377,6 @@ func upsertExpense(tx *gorm.DB, item SyncExpense, mode PushMode, lastPulledAt in
 		Description: item.Description,
 		CreatedAt:   NormalizeTSMillis(item.CreatedAt),
 		UpdatedAt:   NormalizeTSMillis(item.UpdatedAt),
-		DeletedAt:   NormalizeTSMillis(item.DeletedAt),
 	}
 	if record.CreatedAt == 0 {
 		record.CreatedAt = ts
@@ -392,14 +390,13 @@ func upsertExpense(tx *gorm.DB, item SyncExpense, mode PushMode, lastPulledAt in
 			return ConflictError{Table: "expenses", ID: item.ID}
 		}
 		return tx.Model(&existing).UpdateColumns(map[string]any{
-			"space_id":       record.SpaceID,
-			"payer_id":       record.PayerID,
-			"amount":         record.Amount,
-			"description":    record.Description,
-			"created_at":     record.CreatedAt,
-			"updated_at":     record.UpdatedAt,
-			"deleted_at":     record.DeletedAt,
-			"last_modified":  ts,
+			"space_id":      record.SpaceID,
+			"payer_id":      record.PayerID,
+			"amount":        record.Amount,
+			"description":   record.Description,
+			"created_at":    record.CreatedAt,
+			"updated_at":    record.UpdatedAt,
+			"last_modified": ts,
 		}).Error
 	case errors.Is(err, gorm.ErrRecordNotFound):
 		record.ServerCreatedAt = ts
@@ -419,7 +416,6 @@ func upsertPost(tx *gorm.DB, item SyncPost, mode PushMode, lastPulledAt int64) e
 		SpaceID:   item.SpaceID,
 		CreatedAt: NormalizeTSMillis(item.CreatedAt),
 		UpdatedAt: NormalizeTSMillis(item.UpdatedAt),
-		DeletedAt: NormalizeTSMillis(item.DeletedAt),
 	}
 	if record.CreatedAt == 0 {
 		record.CreatedAt = ts
@@ -436,7 +432,6 @@ func upsertPost(tx *gorm.DB, item SyncPost, mode PushMode, lastPulledAt int64) e
 			"space_id":      record.SpaceID,
 			"created_at":    record.CreatedAt,
 			"updated_at":    record.UpdatedAt,
-			"deleted_at":    record.DeletedAt,
 			"last_modified": ts,
 		}).Error
 	case errors.Is(err, gorm.ErrRecordNotFound):
@@ -461,7 +456,6 @@ func upsertComment(tx *gorm.DB, item SyncComment, mode PushMode, lastPulledAt in
 		CommentedAt: NormalizeTSMillis(item.CommentedAt),
 		CreatedAt:   NormalizeTSMillis(item.CreatedAt),
 		UpdatedAt:   NormalizeTSMillis(item.UpdatedAt),
-		DeletedAt:   NormalizeTSMillis(item.DeletedAt),
 	}
 	if record.CreatedAt == 0 {
 		record.CreatedAt = ts
@@ -475,15 +469,14 @@ func upsertComment(tx *gorm.DB, item SyncComment, mode PushMode, lastPulledAt in
 			return ConflictError{Table: "comments", ID: item.ID}
 		}
 		return tx.Model(&existing).UpdateColumns(map[string]any{
-			"space_id":       record.SpaceID,
-			"content":        record.Content,
-			"commenter_id":   record.CommenterID,
-			"post_id":        record.PostID,
-			"commented_at":   record.CommentedAt,
-			"created_at":     record.CreatedAt,
-			"updated_at":     record.UpdatedAt,
-			"deleted_at":     record.DeletedAt,
-			"last_modified":  ts,
+			"space_id":      record.SpaceID,
+			"content":       record.Content,
+			"commenter_id":  record.CommenterID,
+			"post_id":       record.PostID,
+			"commented_at":  record.CommentedAt,
+			"created_at":    record.CreatedAt,
+			"updated_at":    record.UpdatedAt,
+			"last_modified": ts,
 		}).Error
 	case errors.Is(err, gorm.ErrRecordNotFound):
 		record.ServerCreatedAt = ts
