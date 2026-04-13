@@ -11,7 +11,7 @@ cd local
 npm install
 ```
 
-1. 如需使用服务器端的网络服务，你需要配置环境变量，确保IP地址和端口对应：
+2. 如需使用服务器端的网络服务，你需要配置环境变量，确保IP地址和端口对应：
 
 ```bash
 cp .env.example .env
@@ -19,7 +19,7 @@ cp .env.example .env
 
 然后修改`.env`文件
 
-1. 启动项目：
+3. 启动项目：
 
 ```bash
 npx expo start
